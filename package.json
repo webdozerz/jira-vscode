@@ -1,0 +1,386 @@
+{
+  "name": "jira-vscode",
+  "displayName": "Jira",
+  "description": "Задачи Jira Data Center в VS Code: дерево по статусам и спринтам, панель задачи, комментарии, ворклоги, смена статуса, ветка из задачи",
+  "version": "0.2.0",
+  "publisher": "local",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run",
+    "icon": "node scripts/make-icon.mjs",
+    "package": "npm run type-check && npm test && node esbuild.mjs --production && vsce package --no-dependencies --skip-license --allow-missing-repository"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "jira",
+          "title": "Jira",
+          "icon": "media/jira.svg"
+        }
+      ]
+    },
+    "views": {
+      "jira": [
+        {
+          "id": "jira.issues",
+          "name": "Задачи"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "jira.issues",
+        "contents": "Чтобы начать, укажите персональный токен Jira.\n[Указать токен](command:jira.setToken)",
+        "when": "!jira.hasToken"
+      },
+      {
+        "view": "jira.issues",
+        "contents": "Проект не выбран.\n[Выбрать проект](command:jira.selectProject)",
+        "when": "jira.hasToken && !jira.hasProject"
+      }
+    ],
+    "commands": [
+      {
+        "command": "jira.setToken",
+        "title": "Указать токен",
+        "category": "Jira"
+      },
+      {
+        "command": "jira.clearToken",
+        "title": "Удалить токен",
+        "category": "Jira"
+      },
+      {
+        "command": "jira.selectProject",
+        "title": "Выбрать проект",
+        "category": "Jira",
+        "icon": "$(project)"
+      },
+      {
+        "command": "jira.filterStatuses",
+        "title": "Фильтр по статусам",
+        "category": "Jira",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "jira.toggleScope",
+        "title": "Мои задачи / Все задачи",
+        "category": "Jira",
+        "icon": "$(account)"
+      },
+      {
+        "command": "jira.refresh",
+        "title": "Обновить",
+        "category": "Jira",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "jira.addComment",
+        "title": "Добавить комментарий",
+        "category": "Jira",
+        "icon": "$(comment)"
+      },
+      {
+        "command": "jira.addWorklog",
+        "title": "Записать ворклог",
+        "category": "Jira",
+        "icon": "$(watch)"
+      },
+      {
+        "command": "jira.transition",
+        "title": "Изменить статус",
+        "category": "Jira",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "jira.openInBrowser",
+        "title": "Открыть в браузере",
+        "category": "Jira",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "jira.copyKey",
+        "title": "Скопировать ключ",
+        "category": "Jira",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "jira.openIssue",
+        "title": "Открыть задачу",
+        "category": "Jira",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "jira.expandAll",
+        "title": "Развернуть все группы",
+        "category": "Jira",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "jira.createBranch",
+        "title": "Создать ветку из задачи",
+        "category": "Jira",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "jira.openByKey",
+        "title": "Открыть задачу по ключу…",
+        "category": "Jira",
+        "icon": "$(search)"
+      },
+      {
+        "command": "jira.filterSprint",
+        "title": "Фильтр по спринту",
+        "category": "Jira",
+        "icon": "$(milestone)"
+      },
+      {
+        "command": "jira.toggleGroupBy",
+        "title": "Группировать по статусам / спринтам",
+        "category": "Jira",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "jira.collapseAll",
+        "title": "Свернуть все группы",
+        "category": "Jira",
+        "icon": "$(collapse-all)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "jira.selectProject",
+          "when": "view == jira.issues && jira.hasToken",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jira.filterStatuses",
+          "when": "view == jira.issues && jira.hasToken && jira.hasProject",
+          "group": "navigation@2"
+        },
+        {
+          "command": "jira.toggleScope",
+          "when": "view == jira.issues && jira.hasToken && jira.hasProject",
+          "group": "navigation@3"
+        },
+        {
+          "command": "jira.collapseAll",
+          "when": "view == jira.issues && jira.hasToken && jira.hasProject && jira.anyExpanded",
+          "group": "navigation@4"
+        },
+        {
+          "command": "jira.expandAll",
+          "when": "view == jira.issues && jira.hasToken && jira.hasProject && !jira.anyExpanded",
+          "group": "navigation@4"
+        },
+        {
+          "command": "jira.refresh",
+          "when": "view == jira.issues && jira.hasToken && jira.hasProject",
+          "group": "navigation@5"
+        },
+        {
+          "command": "jira.clearToken",
+          "when": "view == jira.issues && jira.hasToken",
+          "group": "9_token"
+        },
+        {
+          "command": "jira.filterSprint",
+          "when": "view == jira.issues && jira.hasToken && jira.hasProject",
+          "group": "1_filters@1"
+        },
+        {
+          "command": "jira.toggleGroupBy",
+          "when": "view == jira.issues && jira.hasToken && jira.hasProject",
+          "group": "1_filters@2"
+        },
+        {
+          "command": "jira.openByKey",
+          "when": "view == jira.issues && jira.hasToken",
+          "group": "2_open@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "jira.openIssue",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "0_open@1"
+        },
+        {
+          "command": "jira.addComment",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "inline@1"
+        },
+        {
+          "command": "jira.addWorklog",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "inline@2"
+        },
+        {
+          "command": "jira.transition",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "inline@3"
+        },
+        {
+          "command": "jira.addComment",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "jira.addWorklog",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "1_actions@2"
+        },
+        {
+          "command": "jira.transition",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "1_actions@3"
+        },
+        {
+          "command": "jira.openInBrowser",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "2_open@1"
+        },
+        {
+          "command": "jira.copyKey",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "2_open@2"
+        },
+        {
+          "command": "jira.createBranch",
+          "when": "view == jira.issues && viewItem == issue",
+          "group": "1_actions@4"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "jira.addComment",
+          "when": "false"
+        },
+        {
+          "command": "jira.addWorklog",
+          "when": "false"
+        },
+        {
+          "command": "jira.transition",
+          "when": "false"
+        },
+        {
+          "command": "jira.openInBrowser",
+          "when": "false"
+        },
+        {
+          "command": "jira.copyKey",
+          "when": "false"
+        },
+        {
+          "command": "jira.openIssue",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Jira",
+      "properties": {
+        "jira.baseUrl": {
+          "type": "string",
+          "default": "https://jira.crypton.studio",
+          "description": "Адрес Jira без завершающего слэша."
+        },
+        "jira.maxIssues": {
+          "type": "number",
+          "default": 200,
+          "minimum": 10,
+          "maximum": 1000,
+          "description": "Максимальное число задач, загружаемых в дерево."
+        },
+        "jira.chainTransitions": {
+          "type": "boolean",
+          "default": true,
+          "description": "После смены статуса сразу предлагать следующие переходы (Esc или «Отмена» — закончить)."
+        },
+        "jira.markdownComments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Переключатель «Markdown → разметка Jira» в форме комментария включён по умолчанию."
+        },
+        "jira.branch.template": {
+          "type": "string",
+          "default": "feat/{key}",
+          "markdownDescription": "Шаблон имени ветки. Доступны `{key}` (SE-123) и `{slug}` (название задачи латиницей), например `feat/{key}-{slug}`."
+        },
+        "jira.branch.maxSlugLength": {
+          "type": "number",
+          "default": 40,
+          "minimum": 10,
+          "maximum": 100,
+          "description": "Максимальная длина части `{slug}` в имени ветки."
+        },
+        "jira.branch.baseBranch": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "От какой ветки создавать новую (например, `develop` или `origin/develop`). Пусто — от текущей."
+        },
+        "jira.branch.moveToInProgress": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "always",
+            "never"
+          ],
+          "enumDescriptions": [
+            "Спрашивать после создания ветки",
+            "Всегда переводить задачу в работу",
+            "Не трогать статус"
+          ],
+          "default": "ask",
+          "description": "Переводить ли задачу в статус «в работе» после создания ветки."
+        },
+        "jira.branch.inProgressStatus": {
+          "type": "string",
+          "default": "In progress",
+          "description": "Название статуса «в работе» в вашем workflow."
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^20.14.0",
+    "@types/sanitize-html": "^2.16.2",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "sanitize-html": "^2.18.0"
+  },
+  "icon": "media/icon.png",
+  "keywords": [
+    "jira",
+    "tasks",
+    "worklog",
+    "sprint",
+    "issues"
+  ],
+  "galleryBanner": {
+    "color": "#1b4fd0",
+    "theme": "dark"
+  }
+}

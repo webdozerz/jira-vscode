@@ -1,0 +1,15 @@
+.vscode/**
+.git/**
+.github/**
+src/**
+test/**
+scripts/**
+node_modules/**
+tsconfig*.json
+vitest.config.ts
+esbuild.mjs
+package-lock.json
+**/*.map
+**/*.ts
+media/icon.svg
+.gitignore
