@@ -382,5 +382,13 @@
   "galleryBanner": {
     "color": "#1b4fd0",
     "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webdozerz/jira-vscode.git"
+  },
+  "homepage": "https://github.com/webdozerz/jira-vscode#readme",
+  "bugs": {
+    "url": "https://github.com/webdozerz/jira-vscode/issues"
   }
 }

@@ -8,13 +8,27 @@
 
 ## Установка
 
-1. Скачайте файл `jira-vscode-<версия>.vsix`.
-2. В VS Code: **Extensions** → меню `…` → **Install from VSIX…** — или в терминале:
+Нужен VS Code 1.85+ и команда `code` в PATH (VS Code → `Shell Command: Install 'code' command in PATH`).
+`code --install-extension` не понимает ссылок, поэтому файл сначала скачивается, затем устанавливается.
 
-   ```bash
-   code --install-extension jira-vscode-0.2.0.vsix
-   ```
-3. Перезагрузите окно, если VS Code попросит.
+**macOS / Linux**
+
+```bash
+curl -fL -o /tmp/jira-vscode.vsix https://github.com/webdozerz/jira-vscode/releases/latest/download/jira-vscode.vsix \
+  && code --install-extension /tmp/jira-vscode.vsix --force
+```
+
+**Windows (PowerShell)**
+
+```powershell
+Invoke-WebRequest https://github.com/webdozerz/jira-vscode/releases/latest/download/jira-vscode.vsix -OutFile $env:TEMP\jira-vscode.vsix
+code --install-extension $env:TEMP\jira-vscode.vsix --force
+```
+
+Те же команды обновляют расширение до последней версии. После установки перезагрузите окно VS Code.
+
+Без терминала: скачайте `jira-vscode.vsix` со страницы [Releases](https://github.com/webdozerz/jira-vscode/releases),
+затем в VS Code **Extensions** → меню `…` → **Install from VSIX…**.
 
 ## Первый запуск
 
@@ -100,6 +114,16 @@ npm test             # тесты (конвертер Markdown, имена ве�
 npm run package      # проверка типов + тесты + сборка jira-vscode-<версия>.vsix
 npm run icon         # перерисовать media/icon.png из media/icon.svg
 ```
+
+**Выпуск версии:** поднять `version` в `package.json` и записать изменения в `CHANGELOG.md`, затем
+
+```bash
+npm run package
+cp jira-vscode-<версия>.vsix /tmp/jira-vscode.vsix
+gh release create v<версия> /tmp/jira-vscode.vsix --title v<версия> --notes-file <заметки>
+```
+
+Имя файла в релизе всегда `jira-vscode.vsix` — на него ссылается команда установки (`releases/latest/download/…`).
 
 Используются методы Jira REST API: `/rest/api/2` (проекты, поиск, задача, комментарии, ворклоги, переходы,
 поля), `/rest/agile/1.0` (доски и спринты), `/rest/api/1.0/render` (предпросмотр разметки).
